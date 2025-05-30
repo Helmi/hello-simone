@@ -1,0 +1,7 @@
+node_modules/
+.env
+.DS_Store
+*.log
+.simone/
+.claude/
+.simone_backup_*/
