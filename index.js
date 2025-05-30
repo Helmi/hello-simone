@@ -99,8 +99,9 @@ async function downloadDirectory(githubPath, localPath, spinner) {
 }
 
 async function installSimone(options = {}) {
-  console.log(chalk.blue.bold('\\n🎉 Welcome to HelloSimone!\\n'));
-  console.log(chalk.gray('This installer will set up the Simone project management framework\\nfor your Claude Code project.\\n'));
+  console.log(chalk.blue.bold('\n🎉 Welcome to HelloSimone!\n'));
+  console.log(chalk.gray('This installer will set up the Simone project management framework'));
+  console.log(chalk.gray('for your Claude Code project.\n'));
 
   const hasExisting = await checkExistingInstallation();
   
@@ -117,7 +118,7 @@ async function installSimone(options = {}) {
     });
 
     if (response.action === 'skip' || response.action === 'cancel') {
-      console.log(chalk.yellow('\\nInstallation cancelled.'));
+      console.log(chalk.yellow('\nInstallation cancelled.'));
       process.exit(0);
     }
 
@@ -176,18 +177,18 @@ async function installSimone(options = {}) {
 
     spinner.succeed(chalk.green('✅ Simone framework installed successfully!'));
 
-    console.log(chalk.blue('\\n📁 Created structure:'));
+    console.log(chalk.blue('\n📁 Created structure:'));
     console.log(chalk.gray('   .simone/              - Project management root'));
     console.log(chalk.gray('   .claude/commands/     - Claude custom commands'));
 
-    console.log(chalk.green('\\n🚀 Next steps:'));
+    console.log(chalk.green('\n🚀 Next steps:'));
     console.log(chalk.white('   1. Open this project in Claude Code'));
     console.log(chalk.white('   2. Use /simone commands to manage your project'));
-    console.log(chalk.white('   3. Start with /simone init to set up your project\\n'));
+    console.log(chalk.white('   3. Start with /simone init to set up your project\n'));
 
   } catch (error) {
     spinner.fail(chalk.red('Installation failed'));
-    console.error(chalk.red('\\nError details:'), error.message);
+    console.error(chalk.red('\nError details:'), error.message);
     process.exit(1);
   }
 }
