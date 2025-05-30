@@ -183,8 +183,8 @@ async function installSimone(options = {}) {
 
     console.log(chalk.green('\n🚀 Next steps:'));
     console.log(chalk.white('   1. Open this project in Claude Code'));
-    console.log(chalk.white('   2. Use /simone commands to manage your project'));
-    console.log(chalk.white('   3. Start with /simone init to set up your project\n'));
+    console.log(chalk.white('   2. Use /project:simone commands to manage your project'));
+    console.log(chalk.white('   3. Start with /project:simone:initialize to set up your project\n'));
 
   } catch (error) {
     spinner.fail(chalk.red('Installation failed'));

@@ -65,8 +65,8 @@ your-project/
 After installation:
 
 1. Open your project in Claude Code
-2. Use `/simone` commands to manage your project
-3. Start with `/simone init` to set up your project
+2. Use `/project:simone` commands to manage your project
+3. Start with `/project:simone:initialize` to set up your project
 
 ## Features
 
