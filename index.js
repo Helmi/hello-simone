@@ -157,6 +157,23 @@ async function installSimone(options = {}) {
       // If manifest doesn't exist, that's okay
     }
 
+    // Download CLAUDE.md documentation files
+    const claudeFiles = [
+      '.simone/CLAUDE.md',
+      '.simone/02_REQUIREMENTS/CLAUDE.md',
+      '.simone/03_SPRINTS/CLAUDE.md',
+      '.simone/04_GENERAL_TASKS/CLAUDE.md'
+    ];
+
+    for (const claudeFile of claudeFiles) {
+      try {
+        const claudeUrl = `${GITHUB_RAW_URL}/${claudeFile}`;
+        await downloadFile(claudeUrl, claudeFile);
+      } catch (error) {
+        // If CLAUDE.md doesn't exist, that's okay
+      }
+    }
+
     // Download templates
     try {
       await downloadDirectory('.simone/99_TEMPLATES', '.simone/99_TEMPLATES', spinner);
