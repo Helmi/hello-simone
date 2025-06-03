@@ -61,22 +61,70 @@ async function checkExistingInstallation() {
   return simoneExists || claudeCommandsExists;
 }
 
-async function createBackup() {
-  const backupDir = `.simone_backup_${Date.now()}`;
-  const spinner = ora('Creating backup...').start();
+async function backupFile(filePath) {
+  try {
+    const exists = await fs.access(filePath).then(() => true).catch(() => false);
+    if (exists) {
+      const backupPath = `${filePath}.bak`;
+      await fs.copyFile(filePath, backupPath);
+      return backupPath;
+    }
+  } catch (error) {
+    // Backup failed, but continue
+  }
+  return null;
+}
+
+async function backupCommandsAndDocs() {
+  const spinner = ora('Backing up existing commands and documentation...').start();
+  const backedUpFiles = [];
   
   try {
-    if (await fs.access('.simone').then(() => true).catch(() => false)) {
-      await fs.cp('.simone', backupDir, { recursive: true });
+    // Files that will be updated and need backup
+    const filesToBackup = [
+      '.simone/CLAUDE.md',
+      '.simone/02_REQUIREMENTS/CLAUDE.md',
+      '.simone/03_SPRINTS/CLAUDE.md',
+      '.simone/04_GENERAL_TASKS/CLAUDE.md'
+    ];
+
+    // Backup CLAUDE.md files
+    for (const file of filesToBackup) {
+      const backupPath = await backupFile(file);
+      if (backupPath) {
+        backedUpFiles.push(backupPath);
+      }
     }
-    if (await fs.access('.claude/commands/simone').then(() => true).catch(() => false)) {
-      await fs.mkdir(path.join(backupDir, '.claude/commands'), { recursive: true });
-      await fs.cp('.claude/commands/simone', path.join(backupDir, '.claude/commands/simone'), { recursive: true });
+
+    // Backup all command files
+    const commandsDir = '.claude/commands/simone';
+    const commandsExist = await fs.access(commandsDir).then(() => true).catch(() => false);
+    if (commandsExist) {
+      try {
+        const commandFiles = await fs.readdir(commandsDir, { recursive: true });
+        for (const file of commandFiles) {
+          const filePath = path.join(commandsDir, file);
+          const stat = await fs.stat(filePath);
+          if (stat.isFile()) {
+            const backupPath = await backupFile(filePath);
+            if (backupPath) {
+              backedUpFiles.push(backupPath);
+            }
+          }
+        }
+      } catch (error) {
+        // Commands directory might be empty or have issues
+      }
     }
-    spinner.succeed(chalk.green(`Backup created at ${backupDir}`));
-    return backupDir;
+
+    if (backedUpFiles.length > 0) {
+      spinner.succeed(chalk.green(`Backed up ${backedUpFiles.length} files (*.bak)`));
+    } else {
+      spinner.succeed(chalk.gray('No existing files to backup'));
+    }
+    return backedUpFiles;
   } catch (error) {
-    spinner.fail(chalk.red('Failed to create backup'));
+    spinner.fail(chalk.red('Backup failed'));
     throw error;
   }
 }
@@ -111,7 +159,7 @@ async function installSimone(options = {}) {
       name: 'action',
       message: 'Existing Simone installation detected. What would you like to do?',
       choices: [
-        { title: 'Update (overwrites commands and templates)', value: 'update' },
+        { title: 'Update (updates commands and docs only, preserves your work)', value: 'update' },
         { title: 'Skip installation', value: 'skip' },
         { title: 'Cancel', value: 'cancel' }
       ]
@@ -123,7 +171,7 @@ async function installSimone(options = {}) {
     }
 
     if (response.action === 'update') {
-      await createBackup();
+      await backupCommandsAndDocs();
     }
   }
 
@@ -146,18 +194,28 @@ async function installSimone(options = {}) {
       await fs.mkdir(dir, { recursive: true });
     }
 
-    // Download .simone content
-    spinner.text = 'Downloading Simone framework files...';
-    
-    // Get the root manifest
-    try {
-      const manifestUrl = `${GITHUB_RAW_URL}/.simone/00_PROJECT_MANIFEST.md`;
-      await downloadFile(manifestUrl, '.simone/00_PROJECT_MANIFEST.md');
-    } catch (error) {
-      // If manifest doesn't exist, that's okay
+    // Only download manifest on fresh installs
+    if (!hasExisting) {
+      spinner.text = 'Downloading Simone framework files...';
+      
+      // Get the root manifest
+      try {
+        const manifestUrl = `${GITHUB_RAW_URL}/.simone/00_PROJECT_MANIFEST.md`;
+        await downloadFile(manifestUrl, '.simone/00_PROJECT_MANIFEST.md');
+      } catch (error) {
+        // If manifest doesn't exist, that's okay
+      }
+
+      // Download templates on fresh install
+      try {
+        await downloadDirectory('.simone/99_TEMPLATES', '.simone/99_TEMPLATES', spinner);
+      } catch (error) {
+        spinner.text = 'Templates directory not found, skipping...';
+      }
     }
 
-    // Download CLAUDE.md documentation files
+    // Always update CLAUDE.md documentation files
+    spinner.text = 'Updating documentation...';
     const claudeFiles = [
       '.simone/CLAUDE.md',
       '.simone/02_REQUIREMENTS/CLAUDE.md',
@@ -174,25 +232,28 @@ async function installSimone(options = {}) {
       }
     }
 
-    // Download templates
-    try {
-      await downloadDirectory('.simone/99_TEMPLATES', '.simone/99_TEMPLATES', spinner);
-    } catch (error) {
-      spinner.text = 'Templates directory not found, skipping...';
-    }
-
     // Create .claude/commands/simone directory
     await fs.mkdir('.claude/commands/simone', { recursive: true });
 
-    // Download commands
-    spinner.text = 'Installing Simone commands...';
+    // Always update commands
+    spinner.text = 'Updating Simone commands...';
     try {
       await downloadDirectory('.claude/commands/simone', '.claude/commands/simone', spinner);
     } catch (error) {
       spinner.text = 'Commands directory not found, skipping...';
     }
 
-    spinner.succeed(chalk.green('✅ Simone framework installed successfully!'));
+    if (hasExisting) {
+      spinner.succeed(chalk.green('✅ Simone framework updated successfully!'));
+      console.log(chalk.blue('\n🔄 Updated:'));
+      console.log(chalk.gray('   • Commands in .claude/commands/simone/'));
+      console.log(chalk.gray('   • Documentation (CLAUDE.md files)'));
+      console.log(chalk.green('\n💾 Your work is preserved:'));
+      console.log(chalk.gray('   • All tasks, sprints, and project files remain untouched'));
+      console.log(chalk.gray('   • Backups created as *.bak files'));
+    } else {
+      spinner.succeed(chalk.green('✅ Simone framework installed successfully!'));
+    }
 
     console.log(chalk.blue('\n📁 Created structure:'));
     console.log(chalk.gray('   .simone/              - Project management root'));
@@ -213,7 +274,7 @@ async function installSimone(options = {}) {
 program
   .name('hello-simone')
   .description('Installer for the Simone project management framework')
-  .version('0.1.0')
+  .version('0.3.0')
   .option('-f, --force', 'Force installation without prompts')
   .action(installSimone);
 
