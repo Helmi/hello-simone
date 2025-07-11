@@ -1,6 +1,6 @@
 {
   "name": "hello-simone",
-  "version": "0.3.0",
+  "version": "0.5.4",
   "description": "Installer for the Simone project management framework for Claude Code",
   "main": "index.js",
   "type": "module",
@@ -10,9 +10,18 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["simone", "claude", "project-management", "installer"],
+  "keywords": [
+    "simone",
+    "claude",
+    "project-management",
+    "installer"
+  ],
   "author": "Helmi",
   "license": "MIT",
+  "files": [
+    "index.js",
+    "README.md"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Helmi/hello-simone.git"
