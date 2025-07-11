@@ -21,26 +21,14 @@ That's it! The installer will:
 
 ## Usage
 
-### First Time Installation
-
 ```bash
 npx hello-simone
 ```
 
-### Update Existing Installation
-
-If Simone is already installed, the installer will detect it and offer options to:
-- Update (with automatic backup)
-- Skip installation
-- Cancel
-
-### Force Installation
-
-Skip all prompts and force installation:
-
-```bash
-npx hello-simone --force
-```
+The installer automatically detects existing installations and will:
+- Back up your commands to `.claude/simone-commands-backup/`
+- Preserve all your project data in `.simone/`
+- Update only the framework files and commands
 
 ## What Gets Installed
 
@@ -65,8 +53,8 @@ your-project/
 After installation:
 
 1. Open your project in Claude Code
-2. Use `/project:simone` commands to manage your project
-3. Start with `/project:simone:initialize` to set up your project
+2. Use `/simone` commands to manage your project
+3. Start with `/simone:initialize` to set up your project
 
 ## Features
 
@@ -78,8 +66,8 @@ After installation:
 
 ## Requirements
 
-- Node.js 14.0.0 or higher
-- Internet connection to download from GitHub
+- Node.js 18+ 
+- npm (comes with Node.js)
 
 ## Source
 
